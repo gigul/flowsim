@@ -1,0 +1,99 @@
+{
+  "id": "tpl-b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "name": "Доставка заказов",
+  "nodes": [
+    {
+      "id": "node-2b3c4d5e-0002-4000-a000-000000000001",
+      "type": "source",
+      "label": "Заказы",
+      "position": { "x": 100, "y": 300 },
+      "params": {
+        "interArrivalTime": { "type": "exponential", "mean": 15 }
+      }
+    },
+    {
+      "id": "node-2b3c4d5e-0002-4000-a000-000000000002",
+      "type": "queue",
+      "label": "Входящие",
+      "position": { "x": 350, "y": 300 },
+      "params": {
+        "capacity": 9999,
+        "discipline": "FIFO"
+      }
+    },
+    {
+      "id": "node-2b3c4d5e-0002-4000-a000-000000000003",
+      "type": "process",
+      "label": "Комплектация",
+      "position": { "x": 600, "y": 300 },
+      "params": {
+        "serviceTime": { "type": "normal", "mean": 12, "stddev": 3 },
+        "resourceCount": 4,
+        "name": "Комплектация"
+      }
+    },
+    {
+      "id": "node-2b3c4d5e-0002-4000-a000-000000000004",
+      "type": "queue",
+      "label": "Ожидание курьера",
+      "position": { "x": 850, "y": 300 },
+      "params": {
+        "capacity": 10,
+        "discipline": "FIFO"
+      }
+    },
+    {
+      "id": "node-2b3c4d5e-0002-4000-a000-000000000005",
+      "type": "process",
+      "label": "Доставка",
+      "position": { "x": 1100, "y": 300 },
+      "params": {
+        "serviceTime": { "type": "triangular", "min": 20, "mode": 35, "max": 60 },
+        "resourceCount": 6,
+        "name": "Доставка"
+      }
+    },
+    {
+      "id": "node-2b3c4d5e-0002-4000-a000-000000000006",
+      "type": "sink",
+      "label": "Доставлено",
+      "position": { "x": 1350, "y": 300 },
+      "params": {
+        "collectStats": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-2b3c4d5e-0002-4000-b000-000000000001",
+      "from": "node-2b3c4d5e-0002-4000-a000-000000000001",
+      "to": "node-2b3c4d5e-0002-4000-a000-000000000002"
+    },
+    {
+      "id": "edge-2b3c4d5e-0002-4000-b000-000000000002",
+      "from": "node-2b3c4d5e-0002-4000-a000-000000000002",
+      "to": "node-2b3c4d5e-0002-4000-a000-000000000003"
+    },
+    {
+      "id": "edge-2b3c4d5e-0002-4000-b000-000000000003",
+      "from": "node-2b3c4d5e-0002-4000-a000-000000000003",
+      "to": "node-2b3c4d5e-0002-4000-a000-000000000004"
+    },
+    {
+      "id": "edge-2b3c4d5e-0002-4000-b000-000000000004",
+      "from": "node-2b3c4d5e-0002-4000-a000-000000000004",
+      "to": "node-2b3c4d5e-0002-4000-a000-000000000005"
+    },
+    {
+      "id": "edge-2b3c4d5e-0002-4000-b000-000000000005",
+      "from": "node-2b3c4d5e-0002-4000-a000-000000000005",
+      "to": "node-2b3c4d5e-0002-4000-a000-000000000006"
+    }
+  ],
+  "config": {
+    "seed": 42,
+    "duration": 480,
+    "timeUnit": "min",
+    "warmupPeriod": 60
+  }
+}

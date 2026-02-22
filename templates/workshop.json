@@ -1,0 +1,115 @@
+{
+  "id": "tpl-d4e5f6a7-b8c9-0123-defa-234567890123",
+  "name": "Мини-цех — производство",
+  "nodes": [
+    {
+      "id": "node-4d5e6f7a-0004-4000-a000-000000000001",
+      "type": "source",
+      "label": "Заготовки",
+      "position": { "x": 100, "y": 300 },
+      "params": {
+        "interArrivalTime": { "type": "exponential", "mean": 20 }
+      }
+    },
+    {
+      "id": "node-4d5e6f7a-0004-4000-a000-000000000002",
+      "type": "queue",
+      "label": "Вход",
+      "position": { "x": 350, "y": 300 },
+      "params": {
+        "capacity": 9999,
+        "discipline": "FIFO"
+      }
+    },
+    {
+      "id": "node-4d5e6f7a-0004-4000-a000-000000000003",
+      "type": "process",
+      "label": "Станок-1 Токарный",
+      "position": { "x": 600, "y": 300 },
+      "params": {
+        "serviceTime": { "type": "normal", "mean": 15, "stddev": 3 },
+        "resourceCount": 2,
+        "name": "Станок-1 Токарный"
+      }
+    },
+    {
+      "id": "node-4d5e6f7a-0004-4000-a000-000000000004",
+      "type": "queue",
+      "label": "Межоперационный буфер",
+      "position": { "x": 850, "y": 300 },
+      "params": {
+        "capacity": 5,
+        "discipline": "FIFO"
+      }
+    },
+    {
+      "id": "node-4d5e6f7a-0004-4000-a000-000000000005",
+      "type": "process",
+      "label": "Станок-2 Фрезерный",
+      "position": { "x": 1100, "y": 300 },
+      "params": {
+        "serviceTime": { "type": "normal", "mean": 18, "stddev": 4 },
+        "resourceCount": 1,
+        "name": "Станок-2 Фрезерный"
+      }
+    },
+    {
+      "id": "node-4d5e6f7a-0004-4000-a000-000000000006",
+      "type": "process",
+      "label": "ОТК",
+      "position": { "x": 1350, "y": 300 },
+      "params": {
+        "serviceTime": { "type": "fixed", "value": 5 },
+        "resourceCount": 1,
+        "name": "ОТК"
+      }
+    },
+    {
+      "id": "node-4d5e6f7a-0004-4000-a000-000000000007",
+      "type": "sink",
+      "label": "Готовая продукция",
+      "position": { "x": 1600, "y": 300 },
+      "params": {
+        "collectStats": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-4d5e6f7a-0004-4000-b000-000000000001",
+      "from": "node-4d5e6f7a-0004-4000-a000-000000000001",
+      "to": "node-4d5e6f7a-0004-4000-a000-000000000002"
+    },
+    {
+      "id": "edge-4d5e6f7a-0004-4000-b000-000000000002",
+      "from": "node-4d5e6f7a-0004-4000-a000-000000000002",
+      "to": "node-4d5e6f7a-0004-4000-a000-000000000003"
+    },
+    {
+      "id": "edge-4d5e6f7a-0004-4000-b000-000000000003",
+      "from": "node-4d5e6f7a-0004-4000-a000-000000000003",
+      "to": "node-4d5e6f7a-0004-4000-a000-000000000004"
+    },
+    {
+      "id": "edge-4d5e6f7a-0004-4000-b000-000000000004",
+      "from": "node-4d5e6f7a-0004-4000-a000-000000000004",
+      "to": "node-4d5e6f7a-0004-4000-a000-000000000005"
+    },
+    {
+      "id": "edge-4d5e6f7a-0004-4000-b000-000000000005",
+      "from": "node-4d5e6f7a-0004-4000-a000-000000000005",
+      "to": "node-4d5e6f7a-0004-4000-a000-000000000006"
+    },
+    {
+      "id": "edge-4d5e6f7a-0004-4000-b000-000000000006",
+      "from": "node-4d5e6f7a-0004-4000-a000-000000000006",
+      "to": "node-4d5e6f7a-0004-4000-a000-000000000007"
+    }
+  ],
+  "config": {
+    "seed": 42,
+    "duration": 480,
+    "timeUnit": "min",
+    "warmupPeriod": 60
+  }
+}

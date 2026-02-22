@@ -1,0 +1,115 @@
+{
+  "id": "tpl-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "Склад — приёмка и отгрузка",
+  "nodes": [
+    {
+      "id": "node-1a2b3c4d-0001-4000-a000-000000000001",
+      "type": "source",
+      "label": "Приёмка",
+      "position": { "x": 100, "y": 300 },
+      "params": {
+        "interArrivalTime": { "type": "exponential", "mean": 10 }
+      }
+    },
+    {
+      "id": "node-1a2b3c4d-0001-4000-a000-000000000002",
+      "type": "queue",
+      "label": "Разгрузка",
+      "position": { "x": 350, "y": 300 },
+      "params": {
+        "capacity": 20,
+        "discipline": "FIFO"
+      }
+    },
+    {
+      "id": "node-1a2b3c4d-0001-4000-a000-000000000003",
+      "type": "process",
+      "label": "Проверка",
+      "position": { "x": 600, "y": 300 },
+      "params": {
+        "serviceTime": { "type": "normal", "mean": 5, "stddev": 1 },
+        "resourceCount": 2,
+        "name": "Проверка"
+      }
+    },
+    {
+      "id": "node-1a2b3c4d-0001-4000-a000-000000000004",
+      "type": "process",
+      "label": "Размещение",
+      "position": { "x": 850, "y": 300 },
+      "params": {
+        "serviceTime": { "type": "uniform", "min": 3, "max": 8 },
+        "resourceCount": 3,
+        "name": "Размещение"
+      }
+    },
+    {
+      "id": "node-1a2b3c4d-0001-4000-a000-000000000005",
+      "type": "queue",
+      "label": "Зона отгрузки",
+      "position": { "x": 1100, "y": 300 },
+      "params": {
+        "capacity": 15,
+        "discipline": "FIFO"
+      }
+    },
+    {
+      "id": "node-1a2b3c4d-0001-4000-a000-000000000006",
+      "type": "process",
+      "label": "Отгрузка",
+      "position": { "x": 1350, "y": 300 },
+      "params": {
+        "serviceTime": { "type": "fixed", "value": 4 },
+        "resourceCount": 2,
+        "name": "Отгрузка"
+      }
+    },
+    {
+      "id": "node-1a2b3c4d-0001-4000-a000-000000000007",
+      "type": "sink",
+      "label": "Завершено",
+      "position": { "x": 1600, "y": 300 },
+      "params": {
+        "collectStats": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1a2b3c4d-0001-4000-b000-000000000001",
+      "from": "node-1a2b3c4d-0001-4000-a000-000000000001",
+      "to": "node-1a2b3c4d-0001-4000-a000-000000000002"
+    },
+    {
+      "id": "edge-1a2b3c4d-0001-4000-b000-000000000002",
+      "from": "node-1a2b3c4d-0001-4000-a000-000000000002",
+      "to": "node-1a2b3c4d-0001-4000-a000-000000000003"
+    },
+    {
+      "id": "edge-1a2b3c4d-0001-4000-b000-000000000003",
+      "from": "node-1a2b3c4d-0001-4000-a000-000000000003",
+      "to": "node-1a2b3c4d-0001-4000-a000-000000000004"
+    },
+    {
+      "id": "edge-1a2b3c4d-0001-4000-b000-000000000004",
+      "from": "node-1a2b3c4d-0001-4000-a000-000000000004",
+      "to": "node-1a2b3c4d-0001-4000-a000-000000000005"
+    },
+    {
+      "id": "edge-1a2b3c4d-0001-4000-b000-000000000005",
+      "from": "node-1a2b3c4d-0001-4000-a000-000000000005",
+      "to": "node-1a2b3c4d-0001-4000-a000-000000000006"
+    },
+    {
+      "id": "edge-1a2b3c4d-0001-4000-b000-000000000006",
+      "from": "node-1a2b3c4d-0001-4000-a000-000000000006",
+      "to": "node-1a2b3c4d-0001-4000-a000-000000000007"
+    }
+  ],
+  "config": {
+    "seed": 42,
+    "duration": 480,
+    "timeUnit": "min",
+    "warmupPeriod": 60
+  }
+}

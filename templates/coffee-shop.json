@@ -1,0 +1,84 @@
+{
+  "id": "tpl-c3d4e5f6-a7b8-9012-cdef-123456789012",
+  "name": "Кофейня — обслуживание клиентов",
+  "nodes": [
+    {
+      "id": "node-3c4d5e6f-0003-4000-a000-000000000001",
+      "type": "source",
+      "label": "Клиенты",
+      "position": { "x": 100, "y": 300 },
+      "params": {
+        "interArrivalTime": { "type": "exponential", "mean": 3 }
+      }
+    },
+    {
+      "id": "node-3c4d5e6f-0003-4000-a000-000000000002",
+      "type": "queue",
+      "label": "Очередь",
+      "position": { "x": 350, "y": 300 },
+      "params": {
+        "capacity": 15,
+        "discipline": "FIFO"
+      }
+    },
+    {
+      "id": "node-3c4d5e6f-0003-4000-a000-000000000003",
+      "type": "process",
+      "label": "Приём заказа",
+      "position": { "x": 600, "y": 300 },
+      "params": {
+        "serviceTime": { "type": "fixed", "value": 1 },
+        "resourceCount": 1,
+        "name": "Приём заказа"
+      }
+    },
+    {
+      "id": "node-3c4d5e6f-0003-4000-a000-000000000004",
+      "type": "process",
+      "label": "Приготовление",
+      "position": { "x": 850, "y": 300 },
+      "params": {
+        "serviceTime": { "type": "normal", "mean": 4, "stddev": 1 },
+        "resourceCount": 2,
+        "name": "Приготовление"
+      }
+    },
+    {
+      "id": "node-3c4d5e6f-0003-4000-a000-000000000005",
+      "type": "sink",
+      "label": "Выдано",
+      "position": { "x": 1100, "y": 300 },
+      "params": {
+        "collectStats": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-3c4d5e6f-0003-4000-b000-000000000001",
+      "from": "node-3c4d5e6f-0003-4000-a000-000000000001",
+      "to": "node-3c4d5e6f-0003-4000-a000-000000000002"
+    },
+    {
+      "id": "edge-3c4d5e6f-0003-4000-b000-000000000002",
+      "from": "node-3c4d5e6f-0003-4000-a000-000000000002",
+      "to": "node-3c4d5e6f-0003-4000-a000-000000000003"
+    },
+    {
+      "id": "edge-3c4d5e6f-0003-4000-b000-000000000003",
+      "from": "node-3c4d5e6f-0003-4000-a000-000000000003",
+      "to": "node-3c4d5e6f-0003-4000-a000-000000000004"
+    },
+    {
+      "id": "edge-3c4d5e6f-0003-4000-b000-000000000004",
+      "from": "node-3c4d5e6f-0003-4000-a000-000000000004",
+      "to": "node-3c4d5e6f-0003-4000-a000-000000000005"
+    }
+  ],
+  "config": {
+    "seed": 42,
+    "duration": 480,
+    "timeUnit": "min",
+    "warmupPeriod": 30
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "id": "tpl-e5f6a7b8-c9d0-1234-efab-345678901234",
+  "name": "Колл-центр",
+  "nodes": [
+    {
+      "id": "node-5e6f7a8b-0005-4000-a000-000000000001",
+      "type": "source",
+      "label": "Звонки",
+      "position": { "x": 100, "y": 300 },
+      "params": {
+        "interArrivalTime": { "type": "exponential", "mean": 2 }
+      }
+    },
+    {
+      "id": "node-5e6f7a8b-0005-4000-a000-000000000002",
+      "type": "queue",
+      "label": "IVR-очередь",
+      "position": { "x": 350, "y": 300 },
+      "params": {
+        "capacity": 50,
+        "discipline": "FIFO"
+      }
+    },
+    {
+      "id": "node-5e6f7a8b-0005-4000-a000-000000000003",
+      "type": "process",
+      "label": "Оператор L1",
+      "position": { "x": 600, "y": 300 },
+      "params": {
+        "serviceTime": { "type": "normal", "mean": 6, "stddev": 2 },
+        "resourceCount": 8,
+        "name": "Оператор L1"
+      }
+    },
+    {
+      "id": "node-5e6f7a8b-0005-4000-a000-000000000004",
+      "type": "sink",
+      "label": "Решено",
+      "position": { "x": 850, "y": 300 },
+      "params": {
+        "collectStats": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-5e6f7a8b-0005-4000-b000-000000000001",
+      "from": "node-5e6f7a8b-0005-4000-a000-000000000001",
+      "to": "node-5e6f7a8b-0005-4000-a000-000000000002"
+    },
+    {
+      "id": "edge-5e6f7a8b-0005-4000-b000-000000000002",
+      "from": "node-5e6f7a8b-0005-4000-a000-000000000002",
+      "to": "node-5e6f7a8b-0005-4000-a000-000000000003"
+    },
+    {
+      "id": "edge-5e6f7a8b-0005-4000-b000-000000000003",
+      "from": "node-5e6f7a8b-0005-4000-a000-000000000003",
+      "to": "node-5e6f7a8b-0005-4000-a000-000000000004"
+    }
+  ],
+  "config": {
+    "seed": 42,
+    "duration": 480,
+    "timeUnit": "min",
+    "warmupPeriod": 30
+  }
+}
