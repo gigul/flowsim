@@ -6,14 +6,16 @@ import { TopBar } from './TopBar';
 
 interface AppShellProps {
   children: React.ReactNode;
+  onSave?: () => void;
+  saveLabel?: string;
 }
 
-export const AppShell: React.FC<AppShellProps> = ({ children }) => {
+export const AppShell: React.FC<AppShellProps> = ({ children, onSave, saveLabel }) => {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <TopBar />
+        <TopBar onSave={onSave} saveLabel={saveLabel} />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>

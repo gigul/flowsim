@@ -118,7 +118,7 @@ export async function getSimulationResults(
 }
 
 export async function cancelSimulation(runId: string): Promise<void> {
-  await api.post(`simulations/${runId}/cancel`);
+  await api.delete(`simulations/${runId}`);
 }
 
 // ── Compare ───────────────────────────────────────────────────────────
@@ -154,17 +154,11 @@ export async function exportJson(projectId: string): Promise<Blob> {
 }
 
 export async function importJson(
-  projectId: string,
-  file: File,
-): Promise<ApiResponse<Scenario>> {
-  const formData = new FormData();
-  formData.append('file', file);
+  data: Record<string, unknown>,
+): Promise<{ projectId: string; name: string; scenariosImported: number; scenarios: Array<{ id: string; name: string }> }> {
   return api
-    .post(`projects/${projectId}/import`, {
-      body: formData,
-      headers: {}, // let browser set Content-Type for multipart
-    })
-    .json<ApiResponse<Scenario>>();
+    .post('projects/import/json', { json: data })
+    .json();
 }
 
 // Convenience namespace object used by pages/components
@@ -195,9 +189,13 @@ export const apiClient = {
     list: () => listTemplates().then((r) => r.data ?? r),
     get: (slug: string) => getTemplate(slug).then((r) => r.data ?? r),
   },
-  exportCsv,
-  exportJson,
-  importJson,
+  export: {
+    csv: exportCsv,
+    json: exportJson,
+  },
+  import: {
+    json: importJson,
+  },
 } as const;
 
 export { apiClient as api };

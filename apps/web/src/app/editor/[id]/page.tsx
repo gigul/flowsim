@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { ReactFlowProvider } from '@xyflow/react';
 import { Undo2, Redo2 } from 'lucide-react';
@@ -14,6 +14,8 @@ import { SimProgress } from '@/components/simulation/SimProgress';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { useGraphStore } from '@/stores/useGraphStore';
 import { useSimStore } from '@/stores/useSimStore';
+import { api } from '@/api/client';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 export default function EditorPage() {
   const params = useParams();
@@ -25,11 +27,30 @@ export default function EditorPage() {
   const { fetchScenarios, scenarios, currentScenarioId, setCurrentScenario } = useProjectStore();
   const { loadFromModel, undo, redo, canUndo, canRedo, setBottleneckNodes } = useGraphStore();
   const { status, result } = useSimStore();
+  const [saved, setSaved] = useState(false);
 
-  // Keyboard shortcuts for undo/redo
+  const activeScenarioId = currentScenarioId || scenarioId;
+  const scenarioName = scenarios.find((s) => s.id === activeScenarioId)?.name ?? 'Model';
+
+  const handleSave = useCallback(async () => {
+    if (!activeScenarioId) return;
+    try {
+      const model = useGraphStore.getState().toProcessModel(activeScenarioId, scenarioName);
+      await api.scenarios.update(activeScenarioId, { modelJson: model });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error('Failed to save scenario:', err);
+    }
+  }, [activeScenarioId, scenarioName]);
+
+  // Keyboard shortcuts for undo/redo and save
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
         e.preventDefault();
         if (e.shiftKey) {
           redo();
@@ -40,7 +61,7 @@ export default function EditorPage() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [undo, redo]);
+  }, [undo, redo, handleSave]);
 
   useEffect(() => {
     fetchScenarios(projectId);
@@ -71,10 +92,8 @@ export default function EditorPage() {
     }
   }, [status, result, setBottleneckNodes]);
 
-  const activeScenarioId = currentScenarioId || scenarioId;
-
   return (
-    <AppShell>
+    <AppShell onSave={handleSave} saveLabel={saved ? 'Saved!' : 'Save'}>
       <div className="flex flex-col h-full">
         {/* Scenario tabs + undo/redo */}
         <div className="h-10 bg-white border-b flex items-center px-4 gap-2">
@@ -114,17 +133,19 @@ export default function EditorPage() {
         </div>
 
         {/* Editor area */}
-        <div className="flex flex-1 overflow-hidden">
-          <ReactFlowProvider>
-            <NodePalette />
-            <GraphCanvas />
-            <PropsPanel />
-          </ReactFlowProvider>
-        </div>
+        <ErrorBoundary>
+          <div className="flex flex-1 overflow-hidden">
+            <ReactFlowProvider>
+              <NodePalette />
+              <GraphCanvas />
+              <PropsPanel />
+            </ReactFlowProvider>
+          </div>
 
-        {/* Simulation */}
-        <SimProgress />
-        {activeScenarioId && <SimToolbar scenarioId={activeScenarioId} />}
+          {/* Simulation */}
+          <SimProgress />
+          {activeScenarioId && <SimToolbar scenarioId={activeScenarioId} />}
+        </ErrorBoundary>
 
         {/* Quick link to results */}
         {status === 'done' && (

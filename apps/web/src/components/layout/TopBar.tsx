@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
-import { usePathname } from 'next/navigation';
+import React, { useRef } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { Save, Download, Upload, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useProjectStore } from '@/stores/useProjectStore';
+import { exportJson, importJson } from '@/api/client';
 
 function getBreadcrumbs(pathname: string, projectName?: string): string[] {
   const crumbs = ['FlowSim'];
@@ -23,13 +24,58 @@ function getBreadcrumbs(pathname: string, projectName?: string): string[] {
   return crumbs;
 }
 
-export const TopBar: React.FC = () => {
+interface TopBarProps {
+  onSave?: () => void;
+  saveLabel?: string;
+}
+
+export const TopBar: React.FC<TopBarProps> = ({ onSave, saveLabel }) => {
   const pathname = usePathname();
+  const router = useRouter();
   const projects = useProjectStore((s) => s.projects);
   const currentProjectId = useProjectStore((s) => s.currentProjectId);
+  const fetchProjects = useProjectStore((s) => s.fetchProjects);
   const currentProject = projects.find((p) => p.id === currentProjectId);
   const breadcrumbs = getBreadcrumbs(pathname, currentProject?.name);
   const isEditor = pathname.startsWith('/editor');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = async () => {
+    if (!currentProjectId) return;
+    try {
+      const blob = await exportJson(currentProjectId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `project-${currentProjectId}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed:', err);
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const result = await importJson(data);
+      await fetchProjects();
+      router.push(`/editor/${result.projectId}`);
+    } catch (err) {
+      console.error('Import failed:', err);
+    }
+    // Reset the input so the same file can be selected again
+    e.target.value = '';
+  };
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4">
@@ -56,17 +102,24 @@ export const TopBar: React.FC = () => {
       {/* Action buttons */}
       {isEditor && (
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleFileSelected}
+          />
+          <Button variant="outline" size="sm" onClick={handleImportClick}>
             <Upload className="mr-1.5 h-3.5 w-3.5" />
             Import
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="mr-1.5 h-3.5 w-3.5" />
             Export
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={onSave}>
             <Save className="mr-1.5 h-3.5 w-3.5" />
-            Save
+            {saveLabel ?? 'Save'}
           </Button>
         </div>
       )}

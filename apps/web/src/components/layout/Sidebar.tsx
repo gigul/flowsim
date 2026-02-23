@@ -26,7 +26,25 @@ export const Sidebar: React.FC = () => {
   const scenarios = useProjectStore((s) => s.scenarios);
   const currentScenarioId = useProjectStore((s) => s.currentScenarioId);
   const setCurrentScenario = useProjectStore((s) => s.setCurrentScenario);
+  const createScenario = useProjectStore((s) => s.createScenario);
   const currentProjectId = useProjectStore((s) => s.currentProjectId);
+
+  const handleAddScenario = async () => {
+    if (!currentProjectId) return;
+    const name = `Scenario ${scenarios.length + 1}`;
+    const emptyModel = {
+      id: crypto.randomUUID(),
+      name,
+      nodes: [],
+      edges: [],
+      config: { seed: 42, duration: 480, timeUnit: 'min' as const, warmupPeriod: 60 },
+    };
+    try {
+      await createScenario(currentProjectId, name, emptyModel as any);
+    } catch (err) {
+      console.error('Failed to create scenario:', err);
+    }
+  };
 
   return (
     <aside className="flex w-60 flex-col border-r border-gray-200 bg-white">
@@ -78,7 +96,7 @@ export const Sidebar: React.FC = () => {
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
               Scenarios
             </span>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleAddScenario}>
               <Plus className="h-3.5 w-3.5" />
             </Button>
           </div>

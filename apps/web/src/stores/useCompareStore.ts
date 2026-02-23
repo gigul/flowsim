@@ -47,10 +47,26 @@ export const useCompareStore = create<CompareState>((set, get) => ({
 
     set({ loading: true, error: null });
     try {
-      const res = await api.runComparison({
+      const res: any = await api.runComparison({
         scenarioIds: selectedScenarioIds,
       });
-      const compareResult = (res as any).data ?? res;
+      // API returns { comparisons: [{ scenarioId, scenarioName, result, ... }] }
+      // Transform into CompareResult shape { scenarios: [{ scenarioId, name, metrics }] }
+      const raw = res.data ?? res;
+      const comparisons = raw.comparisons ?? [];
+      const compareResult: CompareResult = {
+        scenarios: comparisons.map((c: any) => ({
+          scenarioId: c.scenarioId,
+          name: c.scenarioName,
+          metrics: c.result?.summary ?? {
+            throughput: 0,
+            avgLeadTime: 0,
+            avgWIP: 0,
+            totalEntities: 0,
+            simulatedTime: 0,
+          },
+        })),
+      };
       set({ compareResult, loading: false });
     } catch (err) {
       set({

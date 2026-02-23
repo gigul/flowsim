@@ -11,6 +11,7 @@ import { BottleneckList } from '@/components/results/BottleneckList';
 import { Button } from '@/components/ui/button';
 import { api } from '@/api/client';
 import { Download } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 export default function ResultsPage() {
   const params = useParams();
@@ -38,7 +39,7 @@ export default function ResultsPage() {
   }
 
   async function handleExportCsv() {
-    const csv = await api.exportCsv(runId);
+    const csv = await api.export.csv(runId);
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -83,36 +84,38 @@ export default function ResultsPage() {
 
   return (
     <AppShell>
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">Результаты симуляции</h1>
-          <Button variant="outline" size="sm" onClick={handleExportCsv}>
-            <Download className="w-4 h-4 mr-1" />
-            Экспорт CSV
-          </Button>
-        </div>
+      <ErrorBoundary>
+        <div className="max-w-6xl mx-auto p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-gray-900">Результаты симуляции</h1>
+            <Button variant="outline" size="sm" onClick={handleExportCsv}>
+              <Download className="w-4 h-4 mr-1" />
+              Экспорт CSV
+            </Button>
+          </div>
 
-        <SummaryCards
-          throughput={result.summary.throughput}
-          avgLeadTime={result.summary.avgLeadTime}
-          avgWIP={result.summary.avgWIP}
-          totalEntities={result.summary.totalEntities}
-          timeUnit={timeUnit}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <UtilizationChart data={processNodes} />
-          <WipTimeline
-            timestamps={result.timeSeries?.timestamps || []}
-            wip={result.timeSeries?.wip || []}
+          <SummaryCards
+            throughput={result.summary.throughput}
+            avgLeadTime={result.summary.avgLeadTime}
+            avgWIP={result.summary.avgWIP}
+            totalEntities={result.summary.totalEntities}
             timeUnit={timeUnit}
           />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <UtilizationChart data={processNodes} />
+            <WipTimeline
+              timestamps={result.timeSeries?.timestamps || []}
+              wip={result.timeSeries?.wip || []}
+              timeUnit={timeUnit}
+            />
+          </div>
+
+          <MetricsTable data={nodeMetricsArray} />
+
+          <BottleneckList bottlenecks={result.bottlenecks || []} />
         </div>
-
-        <MetricsTable data={nodeMetricsArray} />
-
-        <BottleneckList bottlenecks={result.bottlenecks || []} />
-      </div>
+      </ErrorBoundary>
     </AppShell>
   );
 }
