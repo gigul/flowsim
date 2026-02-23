@@ -47,10 +47,11 @@ export const useCompareStore = create<CompareState>((set, get) => ({
 
     set({ loading: true, error: null });
     try {
-      const res = await api.runComparison(projectId, {
+      const res = await api.runComparison({
         scenarioIds: selectedScenarioIds,
       });
-      set({ compareResult: res.data, loading: false });
+      const compareResult = (res as any).data ?? res;
+      set({ compareResult, loading: false });
     } catch (err) {
       set({
         error:

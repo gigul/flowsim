@@ -34,10 +34,18 @@ export const useSimStore = create<SimState>((set, get) => ({
   startSimulation: async (scenarioId, config) => {
     set({ status: 'pending', progress: 0, result: null, error: null });
     try {
-      const res = await api.startSimulation(scenarioId, config ? { config } : undefined);
-      set({ runId: res.data.id, status: 'running' });
+      const res: any = await api.startSimulation(scenarioId, config ? { config } : undefined);
+      const runId = res.runId ?? res.data?.id;
+      set({ runId });
 
-      // Start polling
+      // API returns results synchronously — skip polling if already done
+      if (res.status === 'done' && res.result) {
+        set({ status: 'done', progress: 100, result: res.result });
+        return;
+      }
+
+      // Fallback: poll if not yet done
+      set({ status: 'running' });
       if (pollInterval) clearInterval(pollInterval);
       pollInterval = setInterval(() => {
         get().pollStatus();
@@ -56,8 +64,9 @@ export const useSimStore = create<SimState>((set, get) => ({
     if (!runId) return;
 
     try {
-      const res = await api.getSimulationStatus(runId);
-      const { status, progress, error } = res.data;
+      const res: any = await api.getSimulationStatus(runId);
+      const status = res.status ?? res.data?.status;
+      const error = res.error ?? res.data?.error;
 
       if (status === 'done') {
         if (pollInterval) {
@@ -75,7 +84,6 @@ export const useSimStore = create<SimState>((set, get) => ({
       } else {
         set({
           status: status === 'pending' ? 'pending' : 'running',
-          progress,
         });
       }
     } catch (err) {
@@ -95,8 +103,8 @@ export const useSimStore = create<SimState>((set, get) => ({
     if (!runId) return;
 
     try {
-      const res = await api.getSimulationResults(runId);
-      set({ result: res.data });
+      const res: any = await api.getSimulationResults(runId);
+      set({ result: res.data ?? res });
     } catch (err) {
       set({
         error:

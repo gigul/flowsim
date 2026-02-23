@@ -3,11 +3,12 @@
 import React, { memo } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Cog } from 'lucide-react';
-import type { FlowNodeData } from '@/stores/useGraphStore';
+import { useGraphStore, type FlowNodeData } from '@/stores/useGraphStore';
 
-type ProcessNodeProps = NodeProps & { data: FlowNodeData };
+type ProcessNodeProps = NodeProps & { data: FlowNodeData; id: string };
 
-const ProcessNode: React.FC<ProcessNodeProps> = ({ data, selected }) => {
+const ProcessNode: React.FC<ProcessNodeProps> = ({ id, data, selected }) => {
+  const isBottleneck = useGraphStore((s) => s.bottleneckNodeIds.has(id));
   const params = data.params as {
     serviceTime?: { type: string; mean?: number; value?: number };
     resourceCount?: number;
@@ -23,8 +24,12 @@ const ProcessNode: React.FC<ProcessNodeProps> = ({ data, selected }) => {
 
   return (
     <div
-      className={`rounded-lg border-2 bg-green-50 px-4 py-3 shadow-sm transition-shadow ${
-        selected ? 'border-green-600 shadow-md ring-2 ring-green-300' : 'border-green-400'
+      className={`rounded-lg border-2 px-4 py-3 shadow-sm transition-shadow ${
+        isBottleneck
+          ? 'border-red-500 bg-red-50 ring-2 ring-red-300 shadow-md'
+          : selected
+            ? 'border-green-600 bg-green-50 shadow-md ring-2 ring-green-300'
+            : 'border-green-400 bg-green-50'
       }`}
       style={{ minWidth: 160 }}
     >

@@ -26,7 +26,7 @@ const exportImportRoutes: FastifyPluginAsync = async (fastify) => {
         throw NotFound('Simulation run', request.params.runId);
       }
 
-      if (run.status !== 'completed' || !run.resultJson) {
+      if (run.status !== 'done' || !run.resultJson) {
         throw BadRequest('Results not available (status: ' + run.status + ')');
       }
 

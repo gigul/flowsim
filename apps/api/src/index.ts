@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { initDatabase } from './db/migrate.js';
+import { AppError } from './lib/errors.js';
 import projectRoutes from './routes/projects.js';
 import scenarioRoutes from './routes/scenarios.js';
 import simulateRoutes from './routes/simulate.js';
@@ -24,6 +25,22 @@ async function main() {
     },
   });
 
+  // Error handler
+  app.setErrorHandler((error: Error & { validation?: unknown }, request, reply) => {
+    if (error instanceof AppError) {
+      reply.code(error.statusCode).send(error.toJSON());
+    } else if (error.validation) {
+      reply.code(400).send({
+        error: { code: 'VALIDATION_ERROR', message: error.message },
+      });
+    } else {
+      request.log.error(error);
+      reply.code(500).send({
+        error: { code: 'INTERNAL_ERROR', message: 'Internal server error' },
+      });
+    }
+  });
+
   // Plugins
   await app.register(cors, { origin: CORS_ORIGIN });
   await app.register(helmet, { contentSecurityPolicy: false });
@@ -35,13 +52,13 @@ async function main() {
   // Health
   app.get('/health', async () => ({ status: 'ok', timestamp: Date.now() }));
 
-  // Routes
-  await app.register(projectRoutes, { prefix: '/api' });
-  await app.register(scenarioRoutes, { prefix: '/api' });
-  await app.register(simulateRoutes, { prefix: '/api' });
-  await app.register(compareRoutes, { prefix: '/api' });
-  await app.register(templateRoutes, { prefix: '/api' });
-  await app.register(exportImportRoutes, { prefix: '/api' });
+  // Routes — paths already include /api/ prefix
+  await app.register(projectRoutes);
+  await app.register(scenarioRoutes);
+  await app.register(simulateRoutes);
+  await app.register(compareRoutes);
+  await app.register(templateRoutes);
+  await app.register(exportImportRoutes);
 
   // Graceful shutdown
   const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];

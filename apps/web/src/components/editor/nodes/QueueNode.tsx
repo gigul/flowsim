@@ -3,11 +3,12 @@
 import React, { memo } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { AlignJustify } from 'lucide-react';
-import type { FlowNodeData } from '@/stores/useGraphStore';
+import { useGraphStore, type FlowNodeData } from '@/stores/useGraphStore';
 
-type QueueNodeProps = NodeProps & { data: FlowNodeData };
+type QueueNodeProps = NodeProps & { data: FlowNodeData; id: string };
 
-const QueueNode: React.FC<QueueNodeProps> = ({ data, selected }) => {
+const QueueNode: React.FC<QueueNodeProps> = ({ id, data, selected }) => {
+  const isBottleneck = useGraphStore((s) => s.bottleneckNodeIds.has(id));
   const params = data.params as {
     capacity?: number;
     discipline?: string;
@@ -20,8 +21,12 @@ const QueueNode: React.FC<QueueNodeProps> = ({ data, selected }) => {
 
   return (
     <div
-      className={`rounded-lg border-2 bg-amber-50 px-4 py-3 shadow-sm transition-shadow ${
-        selected ? 'border-amber-600 shadow-md ring-2 ring-amber-300' : 'border-amber-400'
+      className={`rounded-lg border-2 px-4 py-3 shadow-sm transition-shadow ${
+        isBottleneck
+          ? 'border-red-500 bg-red-50 ring-2 ring-red-300 shadow-md'
+          : selected
+            ? 'border-amber-600 bg-amber-50 shadow-md ring-2 ring-amber-300'
+            : 'border-amber-400 bg-amber-50'
       }`}
       style={{ minWidth: 160 }}
     >

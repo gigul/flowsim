@@ -21,7 +21,7 @@ interface ProjectState {
     name: string,
     modelJson: Scenario['modelJson'],
   ) => Promise<Scenario>;
-  deleteScenario: (projectId: string, scenarioId: string) => Promise<void>;
+  deleteScenario: (scenarioId: string) => Promise<void>;
   setCurrentScenario: (id: string | null) => void;
 }
 
@@ -37,7 +37,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.listProjects();
-      set({ projects: res.data, loading: false });
+      const projects = Array.isArray(res) ? res : (res as any).data ?? [];
+      set({ projects, loading: false });
     } catch (err) {
       set({
         error: err instanceof Error ? err.message : 'Failed to fetch projects',
@@ -50,12 +51,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.createProject({ name });
+      const project = (res as any).data ?? res;
       set((state) => ({
-        projects: [...state.projects, res.data],
-        currentProjectId: res.data.id,
+        projects: [...state.projects, project],
+        currentProjectId: project.id,
         loading: false,
       }));
-      return res.data;
+      return project;
     } catch (err) {
       set({
         error: err instanceof Error ? err.message : 'Failed to create project',
@@ -94,7 +96,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.listScenarios(projectId);
-      set({ scenarios: res.data, loading: false });
+      const scenarios = Array.isArray(res) ? res : (res as any).data ?? [];
+      set({ scenarios, loading: false });
     } catch (err) {
       set({
         error:
@@ -108,12 +111,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.createScenario(projectId, { name, modelJson });
+      const scenario = (res as any).data ?? res;
       set((state) => ({
-        scenarios: [...state.scenarios, res.data],
-        currentScenarioId: res.data.id,
+        scenarios: [...state.scenarios, scenario],
+        currentScenarioId: scenario.id,
         loading: false,
       }));
-      return res.data;
+      return scenario;
     } catch (err) {
       set({
         error:
@@ -124,10 +128,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }
   },
 
-  deleteScenario: async (projectId, scenarioId) => {
+  deleteScenario: async (scenarioId) => {
     set({ loading: true, error: null });
     try {
-      await api.deleteScenario(projectId, scenarioId);
+      await api.deleteScenario(scenarioId);
       set((state) => ({
         scenarios: state.scenarios.filter((s) => s.id !== scenarioId),
         currentScenarioId:

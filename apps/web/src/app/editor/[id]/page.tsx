@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { ReactFlowProvider } from '@xyflow/react';
+import { Undo2, Redo2 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
+import { Button } from '@/components/ui/button';
 import { NodePalette } from '@/components/editor/NodePalette';
 import { GraphCanvas } from '@/components/editor/GraphCanvas';
 import { PropsPanel } from '@/components/editor/PropsPanel';
@@ -21,8 +23,24 @@ export default function EditorPage() {
   const scenarioId = searchParams.get('scenario') || '';
 
   const { fetchScenarios, scenarios, currentScenarioId, setCurrentScenario } = useProjectStore();
-  const { loadFromModel } = useGraphStore();
+  const { loadFromModel, undo, redo, canUndo, canRedo, setBottleneckNodes } = useGraphStore();
   const { status, result } = useSimStore();
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo, redo]);
 
   useEffect(() => {
     fetchScenarios(projectId);
@@ -45,16 +63,20 @@ export default function EditorPage() {
 
   useEffect(() => {
     if (status === 'done' && result) {
-      // Could auto-navigate to results
+      // Highlight bottleneck nodes on the canvas
+      const bottleneckIds = result.bottlenecks?.map((b: { nodeId: string }) => b.nodeId) ?? [];
+      setBottleneckNodes(bottleneckIds);
+    } else if (status === 'idle') {
+      setBottleneckNodes([]);
     }
-  }, [status, result]);
+  }, [status, result, setBottleneckNodes]);
 
   const activeScenarioId = currentScenarioId || scenarioId;
 
   return (
     <AppShell>
       <div className="flex flex-col h-full">
-        {/* Scenario tabs */}
+        {/* Scenario tabs + undo/redo */}
         <div className="h-10 bg-white border-b flex items-center px-4 gap-2">
           {scenarios.map((s) => (
             <button
@@ -69,6 +91,26 @@ export default function EditorPage() {
               {s.name}
             </button>
           ))}
+          <div className="ml-auto flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={undo}
+              disabled={!canUndo()}
+              title="Отменить (Ctrl+Z)"
+            >
+              <Undo2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={redo}
+              disabled={!canRedo()}
+              title="Повторить (Ctrl+Shift+Z)"
+            >
+              <Redo2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Editor area */}

@@ -44,7 +44,7 @@ const compareRoutes: FastifyPluginAsync = async (fastify) => {
         .orderBy(desc(simulationRuns.startedAt))
         .limit(1);
 
-      if (!latestRun || latestRun.status !== 'completed' || !latestRun.resultJson) {
+      if (!latestRun || latestRun.status !== 'done' || !latestRun.resultJson) {
         throw BadRequest(
           `No completed simulation results for scenario '${scenario.name}' (${scenarioId})`,
         );

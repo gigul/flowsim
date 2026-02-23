@@ -21,6 +21,7 @@ interface GraphState {
   nodes: Node<FlowNodeData>[];
   edges: Edge[];
   selectedNodeId: string | null;
+  bottleneckNodeIds: Set<string>;
 
   // History for undo/redo
   history: HistoryEntry[];
@@ -38,6 +39,9 @@ interface GraphState {
   setSelectedNode: (id: string | null) => void;
   loadFromModel: (model: ProcessModel) => void;
   toProcessModel: (modelId: string, modelName: string) => ProcessModel;
+  setBottleneckNodes: (ids: string[]) => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
   undo: () => void;
   redo: () => void;
   pushHistory: () => void;
@@ -62,6 +66,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   nodes: [],
   edges: [],
   selectedNodeId: null,
+  bottleneckNodeIds: new Set(),
   history: [],
   historyIndex: -1,
 
@@ -203,6 +208,19 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         warmupPeriod: 60,
       },
     };
+  },
+
+  setBottleneckNodes: (ids) => {
+    set({ bottleneckNodeIds: new Set(ids) });
+  },
+
+  canUndo: () => {
+    return get().historyIndex >= 0;
+  },
+
+  canRedo: () => {
+    const { historyIndex, history } = get();
+    return historyIndex < history.length - 1;
   },
 
   pushHistory: () => {

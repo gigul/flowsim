@@ -18,7 +18,7 @@ import type {
 } from '@/lib/validation';
 
 const api = ky.create({
-  prefixUrl: API_BASE_URL,
+  prefixUrl: `${API_BASE_URL}/api`,
   timeout: 30_000,
   headers: {
     'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ export async function updateProject(
   body: UpdateProjectRequest,
 ): Promise<ApiResponse<Project>> {
   return api
-    .patch(`projects/${id}`, { json: body })
+    .put(`projects/${id}`, { json: body })
     .json<ApiResponse<Project>>();
 }
 
@@ -74,20 +74,18 @@ export async function createScenario(
 }
 
 export async function updateScenario(
-  projectId: string,
   scenarioId: string,
   body: Partial<CreateScenarioRequest>,
 ): Promise<ApiResponse<Scenario>> {
   return api
-    .patch(`projects/${projectId}/scenarios/${scenarioId}`, { json: body })
+    .put(`scenarios/${scenarioId}`, { json: body })
     .json<ApiResponse<Scenario>>();
 }
 
 export async function deleteScenario(
-  projectId: string,
   scenarioId: string,
 ): Promise<void> {
-  await api.delete(`projects/${projectId}/scenarios/${scenarioId}`);
+  await api.delete(`scenarios/${scenarioId}`);
 }
 
 // ── Simulation ────────────────────────────────────────────────────────
@@ -126,11 +124,10 @@ export async function cancelSimulation(runId: string): Promise<void> {
 // ── Compare ───────────────────────────────────────────────────────────
 
 export async function runComparison(
-  projectId: string,
   body: CompareRequest,
 ): Promise<ApiResponse<CompareResult>> {
   return api
-    .post(`projects/${projectId}/compare`, { json: body })
+    .post('compare', { json: body })
     .json<ApiResponse<CompareResult>>();
 }
 
@@ -152,8 +149,8 @@ export async function exportCsv(runId: string): Promise<Blob> {
   return api.get(`simulations/${runId}/export/csv`).blob();
 }
 
-export async function exportJson(scenarioId: string): Promise<Blob> {
-  return api.get(`scenarios/${scenarioId}/export`).blob();
+export async function exportJson(projectId: string): Promise<Blob> {
+  return api.get(`projects/${projectId}/export/json`).blob();
 }
 
 export async function importJson(
@@ -182,7 +179,7 @@ export const apiClient = {
   scenarios: {
     list: (projectId: string) => listScenarios(projectId).then((r) => r.data ?? r),
     create: (projectId: string, body: CreateScenarioRequest) => createScenario(projectId, body).then((r) => r.data ?? r),
-    update: (projectId: string, scenarioId: string, body: Partial<CreateScenarioRequest>) => updateScenario(projectId, scenarioId, body).then((r) => r.data ?? r),
+    update: (scenarioId: string, body: Partial<CreateScenarioRequest>) => updateScenario(scenarioId, body).then((r) => r.data ?? r),
     delete: deleteScenario,
   },
   simulation: {
@@ -192,7 +189,7 @@ export const apiClient = {
     cancel: cancelSimulation,
   },
   compare: {
-    run: (projectId: string, body: CompareRequest) => runComparison(projectId, body).then((r) => r.data ?? r),
+    run: (body: CompareRequest) => runComparison(body).then((r) => r.data ?? r),
   },
   templates: {
     list: () => listTemplates().then((r) => r.data ?? r),

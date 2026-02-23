@@ -16,6 +16,7 @@ export default function ResultsPage() {
   const params = useParams();
   const runId = params.runId as string;
   const [result, setResult] = useState<any>(null);
+  const [timeUnit, setTimeUnit] = useState<string>('мин');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,8 +25,11 @@ export default function ResultsPage() {
 
   async function loadResults() {
     try {
-      const data = await api.simulation.getResults(runId);
-      setResult(data);
+      const data: any = await api.simulation.getResults(runId);
+      setResult(data.result ?? data);
+      if (data.config?.timeUnit) {
+        setTimeUnit(data.config.timeUnit);
+      }
     } catch {
       console.error('Failed to load results');
     } finally {
@@ -93,7 +97,7 @@ export default function ResultsPage() {
           avgLeadTime={result.summary.avgLeadTime}
           avgWIP={result.summary.avgWIP}
           totalEntities={result.summary.totalEntities}
-          timeUnit="мин"
+          timeUnit={timeUnit}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -101,7 +105,7 @@ export default function ResultsPage() {
           <WipTimeline
             timestamps={result.timeSeries?.timestamps || []}
             wip={result.timeSeries?.wip || []}
-            timeUnit="мин"
+            timeUnit={timeUnit}
           />
         </div>
 
