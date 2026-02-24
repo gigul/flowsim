@@ -9,9 +9,13 @@ import {
   GitCompare,
   Plus,
   FolderOpen,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/stores/useProjectStore';
+import { useGraphStore } from '@/stores/useGraphStore';
+import { api } from '@/api/client';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
@@ -27,7 +31,38 @@ export const Sidebar: React.FC = () => {
   const currentScenarioId = useProjectStore((s) => s.currentScenarioId);
   const setCurrentScenario = useProjectStore((s) => s.setCurrentScenario);
   const createScenario = useProjectStore((s) => s.createScenario);
+  const deleteScenario = useProjectStore((s) => s.deleteScenario);
+  const fetchScenarios = useProjectStore((s) => s.fetchScenarios);
   const currentProjectId = useProjectStore((s) => s.currentProjectId);
+
+  const handleRenameScenario = async (scenarioId: string, currentName: string) => {
+    const newName = window.prompt('Новое имя сценария:', currentName);
+    if (!newName || newName === currentName) return;
+    try {
+      await api.scenarios.update(scenarioId, { name: newName });
+      if (currentProjectId) await fetchScenarios(currentProjectId);
+    } catch (err) {
+      console.error('Failed to rename scenario:', err);
+    }
+  };
+
+  const handleDeleteScenario = async (scenarioId: string) => {
+    if (!window.confirm('Удалить сценарий? Это действие нельзя отменить.')) return;
+    try {
+      await deleteScenario(scenarioId);
+    } catch (err) {
+      console.error('Failed to delete scenario:', err);
+    }
+  };
+
+  const handleSwitchScenario = (id: string) => {
+    if (useGraphStore.getState().dirty) {
+      if (!window.confirm('У вас есть несохранённые изменения. Переключить сценарий?')) {
+        return;
+      }
+    }
+    setCurrentScenario(id);
+  };
 
   const handleAddScenario = async () => {
     if (!currentProjectId) return;
@@ -102,18 +137,36 @@ export const Sidebar: React.FC = () => {
           </div>
           <div className="space-y-0.5">
             {scenarios.map((scenario) => (
-              <button
+              <div
                 key={scenario.id}
-                onClick={() => setCurrentScenario(scenario.id)}
                 className={cn(
-                  'flex w-full items-center rounded-md px-3 py-1.5 text-left text-sm transition-colors',
+                  'group flex w-full items-center rounded-md px-3 py-1.5 text-left text-sm transition-colors',
                   currentScenarioId === scenario.id
                     ? 'bg-blue-50 text-blue-700 font-medium'
                     : 'text-gray-600 hover:bg-gray-100',
                 )}
               >
-                {scenario.name}
-              </button>
+                <button
+                  onClick={() => handleSwitchScenario(scenario.id)}
+                  className="flex-1 text-left truncate"
+                >
+                  {scenario.name}
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleRenameScenario(scenario.id, scenario.name); }}
+                  className="ml-1 p-0.5 opacity-0 group-hover:opacity-100 hover:text-blue-600 transition-opacity"
+                  title="Переименовать"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDeleteScenario(scenario.id); }}
+                  className="ml-0.5 p-0.5 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity"
+                  title="Удалить"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
             ))}
             {scenarios.length === 0 && (
               <p className="px-3 py-1.5 text-xs text-gray-400">

@@ -25,7 +25,7 @@ export default function EditorPage() {
   const scenarioId = searchParams.get('scenario') || '';
 
   const { fetchScenarios, scenarios, currentScenarioId, setCurrentScenario } = useProjectStore();
-  const { loadFromModel, undo, redo, canUndo, canRedo, setBottleneckNodes } = useGraphStore();
+  const { loadFromModel, undo, redo, canUndo, canRedo, setBottleneckNodes, markClean } = useGraphStore();
   const { status, result } = useSimStore();
   const [saved, setSaved] = useState(false);
 
@@ -37,12 +37,13 @@ export default function EditorPage() {
     try {
       const model = useGraphStore.getState().toProcessModel(activeScenarioId, scenarioName);
       await api.scenarios.update(activeScenarioId, { modelJson: model });
+      markClean();
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
       console.error('Failed to save scenario:', err);
     }
-  }, [activeScenarioId, scenarioName]);
+  }, [activeScenarioId, scenarioName, markClean]);
 
   // Keyboard shortcuts for undo/redo and save
   useEffect(() => {
@@ -62,6 +63,15 @@ export default function EditorPage() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [undo, redo, handleSave]);
+
+  const handleSwitchScenario = useCallback((id: string) => {
+    if (useGraphStore.getState().dirty) {
+      if (!window.confirm('У вас есть несохранённые изменения. Переключить сценарий?')) {
+        return;
+      }
+    }
+    setCurrentScenario(id);
+  }, [setCurrentScenario]);
 
   useEffect(() => {
     fetchScenarios(projectId);
@@ -100,7 +110,7 @@ export default function EditorPage() {
           {scenarios.map((s) => (
             <button
               key={s.id}
-              onClick={() => setCurrentScenario(s.id)}
+              onClick={() => handleSwitchScenario(s.id)}
               className={`px-3 py-1 text-sm rounded ${
                 s.id === activeScenarioId
                   ? 'bg-blue-100 text-blue-700 font-medium'

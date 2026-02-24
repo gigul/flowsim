@@ -22,6 +22,7 @@ interface GraphState {
   edges: Edge[];
   selectedNodeId: string | null;
   bottleneckNodeIds: Set<string>;
+  dirty: boolean;
 
   // History for undo/redo
   history: HistoryEntry[];
@@ -40,6 +41,7 @@ interface GraphState {
   loadFromModel: (model: ProcessModel) => void;
   toProcessModel: (modelId: string, modelName: string) => ProcessModel;
   setBottleneckNodes: (ids: string[]) => void;
+  markClean: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
   undo: () => void;
@@ -67,6 +69,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   edges: [],
   selectedNodeId: null,
   bottleneckNodeIds: new Set(),
+  dirty: false,
   history: [],
   historyIndex: -1,
 
@@ -89,6 +92,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         { ...connection, id: `e-${generateId()}`, type: 'animated' },
         state.edges,
       ),
+      dirty: true,
     }));
   },
 
@@ -106,7 +110,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         params: structuredClone(DEFAULT_PARAMS[type]) as Record<string, unknown>,
       },
     };
-    set({ nodes: [...nodes, newNode] });
+    set({ nodes: [...nodes, newNode], dirty: true });
   },
 
   removeNode: (id) => {
@@ -115,6 +119,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       nodes: state.nodes.filter((n) => n.id !== id),
       edges: state.edges.filter((e) => e.source !== id && e.target !== id),
       selectedNodeId: state.selectedNodeId === id ? null : state.selectedNodeId,
+      dirty: true,
     }));
   },
 
@@ -124,6 +129,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       nodes: state.nodes.map((n) =>
         n.id === id ? { ...n, data: { ...(n.data as FlowNodeData), ...data } } : n,
       ),
+      dirty: true,
     }));
   },
 
@@ -135,13 +141,14 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       target,
       type: 'animated',
     };
-    set((state) => ({ edges: [...state.edges, edge] }));
+    set((state) => ({ edges: [...state.edges, edge], dirty: true }));
   },
 
   removeEdge: (id) => {
     get().pushHistory();
     set((state) => ({
       edges: state.edges.filter((e) => e.id !== id),
+      dirty: true,
     }));
   },
 
@@ -172,6 +179,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       nodes,
       edges,
       selectedNodeId: null,
+      dirty: false,
       history: [],
       historyIndex: -1,
     });
@@ -208,6 +216,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         warmupPeriod: 60,
       },
     };
+  },
+
+  markClean: () => {
+    set({ dirty: false });
   },
 
   setBottleneckNodes: (ids) => {

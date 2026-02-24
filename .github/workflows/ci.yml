@@ -109,8 +109,8 @@ jobs:
 
   test-e2e:
     name: E2E Tests
+    needs: [build]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
 
@@ -138,7 +138,10 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install chromium --with-deps
+
+      - name: Build
+        run: npx turbo build
 
       - name: Run E2E tests
         run: npx turbo test:e2e
